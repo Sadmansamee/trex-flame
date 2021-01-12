@@ -1,35 +1,32 @@
 import 'dart:ui';
 
-import 'package:flame/components/component.dart';
 import 'package:flame/components/mixins/has_game_ref.dart';
-import 'package:flame/components/mixins/resizable.dart';
-import 'package:flame/components/mixins/tapable.dart';
+import 'package:flame/components/position_component.dart';
+import 'package:flame/components/sprite_component.dart';
 import 'package:flame/sprite.dart';
-import 'package:flame/components/composed_component.dart';
+import 'package:flame/extensions/vector2.dart';
 
 import 'package:trex/game/custom/util.dart';
 import 'package:trex/game/horizon/config.dart';
 
-class CloudManager extends PositionComponent
-    with HasGameRef, Tapable, ComposedComponent, Resizable {
-
+class CloudManager extends PositionComponent with HasGameRef {
   CloudManager(this.spriteImage) : super();
 
   Image spriteImage;
 
   void updateWithSpeed(double t, double speed) {
     final double cloudSpeed = HorizonConfig.bgCloudSpeed / 1000 * t * speed;
-    final int numClouds = components.length;
+    final int numClouds = children.length;
 
     if (numClouds > 0) {
-      for (final c in components) {
+      for (final c in children) {
         final cloud = c as Cloud;
         cloud.updateWithSpeed(t, cloudSpeed);
       }
 
-      final lastCloud = components.last as Cloud;
+      final lastCloud = children.last as Cloud;
       if (numClouds < HorizonConfig.maxClouds &&
-          (size.width / 2 - lastCloud.x) > lastCloud.cloudGap) {
+          (size.x / 2 - lastCloud.x) > lastCloud.cloudGap) {
         addCloud();
       }
     } else {
@@ -39,39 +36,39 @@ class CloudManager extends PositionComponent
 
   void addCloud() {
     final cloud = Cloud(spriteImage);
-    cloud.x = size.width + CloudConfig.width + 10;
+    cloud.x = size.x + CloudConfig.width + 10;
     cloud.y = (y / 2 - (CloudConfig.maxSkyLevel - CloudConfig.minSkyLevel)) +
         getRandomNum(CloudConfig.minSkyLevel, CloudConfig.maxSkyLevel);
-    components.add(cloud);
+    addChild(cloud);
   }
 
   void reset() {
-    components.clear();
+    children.clear();
   }
 }
 
-class Cloud extends SpriteComponent with Resizable {
-
+class Cloud extends SpriteComponent {
   Cloud(Image spriteImage)
       : cloudGap =
             getRandomNum(CloudConfig.minCloudGap, CloudConfig.maxCloudGap),
         super.fromSprite(
-          CloudConfig.width,
-          CloudConfig.height,
-          Sprite.fromImage(
+          Vector2(
+            CloudConfig.width,
+            CloudConfig.height,
+          ),
+          Sprite(
             spriteImage,
-            width: CloudConfig.width,
-            height: CloudConfig.height,
-            y: 2.0,
-            x: 166.0,
+            srcPosition: Vector2(2.0, 166.0),
+            srcSize: Vector2(
+              CloudConfig.width,
+              CloudConfig.height,
+            ),
           ),
         );
 
   final double cloudGap;
   bool toRemove = false;
 
-  @override
-  void update(double t) {}
   void updateWithSpeed(double t, double speed) {
     if (toRemove) {
       return;
@@ -84,7 +81,7 @@ class Cloud extends SpriteComponent with Resizable {
   }
 
   @override
-  bool destroy() {
+  bool remove() {
     return toRemove;
   }
 
@@ -93,7 +90,8 @@ class Cloud extends SpriteComponent with Resizable {
   }
 
   @override
-  void resize(Size size) {
+  void onGameResize(Vector2 gameSize) {
+    super.onGameResize(gameSize);
     y = (y / 2 - (CloudConfig.maxSkyLevel - CloudConfig.minSkyLevel)) +
         getRandomNum(CloudConfig.minSkyLevel, CloudConfig.maxSkyLevel);
   }

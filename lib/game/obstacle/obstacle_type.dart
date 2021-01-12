@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flame/extensions/vector2.dart';
 import 'package:flame/sprite.dart';
 import 'package:trex/game/collision/collision_box.dart';
 
@@ -78,20 +79,16 @@ class ObstacleType {
 
   static Sprite spriteForType(ObstacleType type, Image spriteImage) {
     if (type == cactusSmall) {
-      return Sprite.fromImage(
+      return Sprite(
         spriteImage,
-        x: 446.0,
-        y: 2.0,
-        width: type.width,
-        height: type.height,
+        srcPosition: Vector2(446.0, 2.0),
+        srcSize: Vector2(type.width, type.height),
       );
     }
-    return Sprite.fromImage(
+    return Sprite(
       spriteImage,
-      x: 652.0,
-      y: 2.0,
-      width: type.width,
-      height: type.height,
+      srcPosition: Vector2(446.0, 2.0),
+      srcSize: Vector2(type.width, type.height),
     );
   }
 }

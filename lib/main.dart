@@ -1,7 +1,7 @@
 import 'package:flame/flame.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flame_splash_screen/flame_splash_screen.dart';
-import 'package:flutter/services.dart';
 
 import 'package:trex/game/game.dart';
 
@@ -58,11 +58,6 @@ class _TRexGameWrapperState extends State<TRexGameWrapper> {
     );
   }
 
-  void _onRawKeyEvent(RawKeyEvent event) {
-    if(event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.space) {
-      game.onAction();
-    }
-  }
 
   Widget _buildGame(BuildContext context) {
 
@@ -75,11 +70,8 @@ class _TRexGameWrapperState extends State<TRexGameWrapper> {
       color: Colors.white,
       constraints: const BoxConstraints.expand(),
       child: Container(
-          child: RawKeyboardListener(
-            key: ObjectKey("neh"),
-            child: game.widget,
-            focusNode: _focusNode,
-            onKey: _onRawKeyEvent,
+          child: GameWidget(
+            game: game,
           )
       ),
     );

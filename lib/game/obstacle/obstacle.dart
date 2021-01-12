@@ -1,23 +1,21 @@
 import 'dart:collection';
 import 'dart:ui';
 
-import 'package:flame/components/component.dart';
 import 'package:flame/components/mixins/has_game_ref.dart';
-import 'package:flame/components/mixins/resizable.dart';
-import 'package:flame/components/composed_component.dart';
-import 'package:flame/components/mixins/tapable.dart';
+import 'package:flame/components/position_component.dart';
+import 'package:flame/components/sprite_component.dart';
+import 'package:flame/extensions/vector2.dart';
 import 'package:flame/sprite.dart';
 
 import 'package:trex/game/collision/collision_box.dart';
 import 'package:trex/game/custom/util.dart';
+import 'package:trex/game/game.dart';
 import 'package:trex/game/game_config.dart';
 import 'package:trex/game/horizon/config.dart';
 import 'package:trex/game/obstacle/config.dart';
 import 'package:trex/game/obstacle/obstacle_type.dart';
 
-class ObstacleManager extends PositionComponent
-    with HasGameRef, Tapable, ComposedComponent, Resizable {
-
+class ObstacleManager extends PositionComponent with HasGameRef<TRexGame> {
   ObstacleManager(this.spriteImage) : super();
 
   ListQueue<ObstacleType> history = ListQueue();
@@ -25,13 +23,13 @@ class ObstacleManager extends PositionComponent
   Image spriteImage;
 
   void updateWithSpeed(double t, double speed) {
-    for(final c in components){
+    for (final c in children) {
       final cloud = c as Obstacle;
       cloud.updateWithSpeed(t, speed);
     }
 
-    if (components.isNotEmpty) {
-      final lastObstacle = components.last as Obstacle;
+    if (children.isNotEmpty) {
+      final lastObstacle = children.last as Obstacle;
 
       if (lastObstacle != null &&
           !lastObstacle.followingObstacleCreated &&
@@ -62,9 +60,8 @@ class ObstacleManager extends PositionComponent
         type.width,
       );
 
-      obstacle.x = size.width;
-
-      components.add(obstacle);
+      obstacle.x = size.x;
+      addChild(obstacle);
 
       history.addFirst(type);
       if (history.length > 1) {
@@ -84,37 +81,40 @@ class ObstacleManager extends PositionComponent
   }
 
   void reset() {
-    components.clear();
+    children.clear();
     history.clear();
   }
 
   @override
-  void update(double t) {
-    for (final c in components) {
+  void update(dt) {
+    for (final c in children) {
       final cloud = c as Obstacle;
       cloud.y = y + cloud.type.y - 75;
     }
-    super.update(t);
+    super.update(dt);
   }
 }
 
-class Obstacle extends SpriteComponent with Resizable {
-
+class Obstacle extends SpriteComponent {
   Obstacle(
-      this.type,
-      Sprite sprite,
-      double speed,
-      double gapCoefficient, [
-        double xOffset,
-      ]) : super.fromSprite(
-    type.width,
-    type.height,
-    sprite,
-  ) {
+    this.type,
+    Sprite sprite,
+    double speed,
+    double gapCoefficient, [
+    double xOffset,
+  ]) : super.fromSprite(
+          Vector2(
+            type.width,
+            type.height,
+          ),
+          sprite,
+        ) {
     cloneCollisionBoxes();
 
-    internalSize =
-        getRandomNum(1.0, ObstacleConfig.maxObstacleLength / 1).floor();
+    internalSize = getRandomNum(
+      1.0,
+      ObstacleConfig.maxObstacleLength / 1,
+    ).floor();
     x = HorizonDimensions.width + (xOffset ?? 0.0);
 
     if (internalSize > 1 && type.multipleSpeed > speed) {
@@ -141,9 +141,6 @@ class Obstacle extends SpriteComponent with Resizable {
   double gap = 0.0;
   int internalSize;
 
-  @override
-  void update(double t) {}
-
   void updateWithSpeed(double t, double speed) {
     if (toRemove) {
       return;
@@ -164,7 +161,7 @@ class Obstacle extends SpriteComponent with Resizable {
   }
 
   @override
-  bool destroy() {
+  bool remove() {
     return toRemove;
   }
 

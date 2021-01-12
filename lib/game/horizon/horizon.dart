@@ -1,27 +1,24 @@
 import 'dart:ui';
 
-import 'package:flame/components/component.dart';
-import 'package:flame/components/mixins/has_game_ref.dart';
-import 'package:flame/components/mixins/resizable.dart';
-import 'package:flame/components/mixins/tapable.dart';
 
-import 'package:flame/components/composed_component.dart';
+import 'package:flame/components/mixins/has_game_ref.dart';
+import 'package:flame/components/position_component.dart';
+import 'package:trex/game/game.dart';
 import 'package:trex/game/horizon/horizon_line.dart';
 
-class Horizon extends PositionComponent
-    with Resizable, HasGameRef, Tapable, ComposedComponent {
+class Horizon extends PositionComponent with HasGameRef<TRexGame> {
 
   Horizon(Image spriteImage) {
     horizonLine = HorizonLine(spriteImage);
-    add(horizonLine);
+    addChild(horizonLine);
   }
 
   HorizonLine horizonLine;
 
   @override
-  void update(t) {
+  void update(dt) {
     horizonLine.y = y;
-    super.update(t);
+    super.update(dt);
   }
 
   void updateWithSpeed(double t, double speed) {
@@ -29,9 +26,9 @@ class Horizon extends PositionComponent
       return;
     }
 
-    y = (size.height / 2) + 21.0;
+    y = (size.y / 2) + 21.0;
 
-    for ( final c in components ) {
+    for ( final c in children ) {
       final positionComponent = c as PositionComponent;
       positionComponent.y = y;
     }

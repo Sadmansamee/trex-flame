@@ -2,34 +2,41 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components/mixins/has_game_ref.dart';
-import 'package:flame/components/mixins/resizable.dart';
-import 'package:flame/components/mixins/tapable.dart';
+import 'package:flame/components/position_component.dart';
+import 'package:flame/components/sprite_component.dart';
+import 'package:flame/extensions/vector2.dart';
 import 'package:flame/sprite.dart';
-import 'package:flame/components/component.dart';
-import 'package:flame/components/composed_component.dart';
+import 'package:trex/game/game.dart';
 import 'package:trex/game/horizon/clouds.dart';
 import 'package:trex/game/horizon/config.dart';
 import 'package:trex/game/obstacle/obstacle.dart';
 
 Random rnd = Random();
 
-class HorizonLine extends PositionComponent
-    with HasGameRef, Tapable, ComposedComponent, Resizable {
+class HorizonLine extends PositionComponent with HasGameRef<TRexGame> {
   HorizonLine(Image spriteImage) {
-    final softSprite = Sprite.fromImage(
+    final softSprite = Sprite(
       spriteImage,
-      width: HorizonDimensions.width,
-      height: HorizonDimensions.height,
-      y: 104.0,
-      x: 2.0,
+      srcSize: Vector2(
+        HorizonDimensions.width,
+        HorizonDimensions.height,
+      ),
+      srcPosition: Vector2(
+        104.0,
+        2.0,
+      ),
     );
 
-    final bumpySprite = Sprite.fromImage(
+    final bumpySprite = Sprite(
       spriteImage,
-      width: HorizonDimensions.width,
-      height: HorizonDimensions.height,
-      y: 104.0,
-      x: 2.0 + HorizonDimensions.width,
+      srcSize: Vector2(
+        HorizonDimensions.width,
+        HorizonDimensions.height,
+      ),
+      srcPosition: Vector2(
+        104.0,
+        2.0,
+      ),
     );
 
     cloudManager = CloudManager(spriteImage);
@@ -37,12 +44,14 @@ class HorizonLine extends PositionComponent
     firstGround = HorizonGround(softSprite);
     secondGround = HorizonGround(bumpySprite);
     thirdGround = HorizonGround(softSprite);
+
+    
     this
-      ..add(firstGround)
-      ..add(secondGround)
-      ..add(thirdGround)
-      ..add(cloudManager)
-      ..add(obstacleManager);
+      ..addChild(firstGround)
+      ..addChild(secondGround)
+      ..addChild(thirdGround)
+      ..addChild(cloudManager)
+      ..addChild(obstacleManager);
   }
 
   HorizonGround firstGround;
@@ -76,7 +85,11 @@ class HorizonLine extends PositionComponent
 
   void updateWithSpeed(double t, double speed) {
     final increment = speed * 50 * t;
-    int index = firstGround.x <= 0 ? 0 : secondGround.x <= 0 ? 1 : 2;
+    final int index = firstGround.x <= 0
+        ? 0
+        : secondGround.x <= 0
+            ? 1
+            : 2;
     updateXPos(index, increment);
 
     cloudManager.updateWithSpeed(t, speed);
@@ -86,9 +99,9 @@ class HorizonLine extends PositionComponent
   }
 
   @override
-  void update(t) {
-    super.update(t);
-    for (final c in components) {
+  void update(dt) {
+    super.update(dt);
+    for (final c in children) {
       final positionComponent = c as PositionComponent;
       positionComponent.y = y;
     }
@@ -103,11 +116,13 @@ class HorizonLine extends PositionComponent
   }
 }
 
-class HorizonGround extends SpriteComponent with Resizable {
+class HorizonGround extends SpriteComponent {
   HorizonGround(Sprite sprite)
       : super.fromSprite(
-          HorizonDimensions.width,
-          HorizonDimensions.height,
+          Vector2(
+            HorizonDimensions.width,
+            HorizonDimensions.height,
+          ),
           sprite,
         );
 }
